@@ -6,7 +6,7 @@ import {
 } from '@phosphor/widgets';
 
 import {
-  ICommandPalette, IMainMenu
+  ICommandPalette, IMainMenu, Dialog, showDialog
 } from '@jupyterlab/apputils';
 
 import {
@@ -49,6 +49,7 @@ function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMen
   // via in dictionary app.web_app.settings['page_config_data'].
   let hubHost = PageConfig.getOption('hub_host');
   let hubPrefix = PageConfig.getOption('hub_prefix');
+  let hubUser = PageConfig.getOption('hub_user');
 
   if (!hubPrefix) {
     console.log('jupyterlab-savequit: No configuration found.');
@@ -56,13 +57,13 @@ function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMen
   }
 
   console.log('jupyterlab-savequit: Found configuration ',
-    { hubHost: hubHost, hubPrefix: hubPrefix });
+    { hubHost: hubHost, hubPrefix: hubPrefix, hubUser: hubUser });
 
-  const category = 'SaveQuit';
+  const category = 'Save/Exit';
   const { commands } = app;
 
   commands.addCommand(CommandIDs.saveQuit, {
-    label: 'Save and Quit',
+    label: 'Save and Exit',
     caption: 'Save open notebooks, destroy container, and log out',
     execute: () => {
       saveAndQuit(app, docManager, svcManager)
@@ -85,21 +86,26 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
   each(app.shell.widgets('main'), widget => {
     let context = docManager.contextForWidget(widget);
     if (!context) {
+      console.log("No context for widget:", { id: widget.id })
       return;
     }
+    console.log("Saving context for widget:", { id: widget.id })
     promises.push(context.save().then(() => {
       return context.session.shutdown();
     }));
   });
+  console.log("Waiting for all promises to resolve.")
   Promise.all(promises).then(() => {
     // Log the user out.
     let hubHost = PageConfig.getOption('hub_host');
     let hubPrefix = PageConfig.getOption('hub_prefix');
     let hubUser = PageConfig.getOption('hub_user');
+    console.log("Logging out user:", { user: hubUser })
     let stopURL = hubHost + URLExt.join(hubPrefix, 'api/users',
       hubUser, 'server');
     let logoutURL = hubHost + URLExt.join(hubPrefix, 'logout');
     let settings = svcManager.serverSettings
+    console.log("Settings: ", settings)
     let stopReq = {
       url: stopURL,
       method: 'DELETE'
@@ -108,22 +114,33 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
       url: logoutURL,
       method: 'GET'
     };
+    console.log("Making stop request to ", stopURL, "with settings ", settings)
     ServerConnection.makeRequest(stopReq, settings).then(response => {
       let status = response.xhr.status
       if (status < 200 || status >= 300) {
+        console.log("Status ", status, "=>", response)
         throw ServerConnection.makeError(response)
       }
       ServerConnection.makeRequest(logoutReq, settings).then(response2 => {
         let status2 = response2.xhr.status
+        console.log("Making logout request to ", logoutURL)
         if (status2 < 200 || status2 >= 300) {
+          console.log("Status ", status2, "=>", response2)
           throw ServerConnection.makeError(response2)
         }
-      })
+      }).then(() => showCloseOK())
     })
-  });
+  })
 }
 
-
+function showCloseOK() {
+  let options = {
+    title: "Save and Quit complete",
+    body: "It is now safe to close the browser window or tab.",
+    buttons: [Dialog.okButton()]
+  };
+  return showDialog(options).then(() => { /* no-op */ });
+}
 
 /**
  * Initialization data for the jupyterlab_hub extension.
