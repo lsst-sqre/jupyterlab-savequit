@@ -35,6 +35,7 @@ import {
  */
 export
 namespace CommandIDs {
+  export const saveAll: string = 'saveall:saveall';
   export const saveQuit: string = 'savequit:savequit';
   export const justQuit: string = 'savequit:justquit';
 };
@@ -62,6 +63,14 @@ function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMen
   const category = 'Save/Exit';
   const { commands } = app;
 
+  commands.addCommand(CommandIDs.saveAll, {
+    label: 'Save notebooks',
+    caption: 'Save all open notebooks',
+    execute: () => {
+      justSave(app, docManager, svcManager)
+    }
+  });
+
   commands.addCommand(CommandIDs.saveQuit, {
     label: 'Save, Exit, and Log Out',
     caption: 'Save open notebooks, destroy container, and log out',
@@ -82,6 +91,7 @@ function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMen
   let menu = new Menu({ commands });
   menu.title.label = category;
   [
+    CommandIDs.saveAll,
     CommandIDs.saveQuit,
     CommandIDs.justQuit
   ].forEach(command => {
@@ -91,34 +101,42 @@ function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMen
   mainMenu.addMenu(menu, { rank: 100 });
 }
 
-function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
+function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
   let promises: Promise<void>[] = [];
   each(app.shell.widgets('main'), widget => {
     let context = docManager.contextForWidget(widget);
     if (!context) {
       console.log("No context for widget:", { id: widget.id })
-      return;
+      Promise.reject("No context for widget.")
     }
     console.log("Saving context for widget:", { id: widget.id })
-    promises.push(context.save().then(() => {
-      return context.session.shutdown();
-    }));
-  });
-  console.log("Waiting for all promises to resolve.")
-  Promise.all(promises).then(() => {
-    return justQuit(app, docManager, svcManager)
+    promises.push(context.save())
   })
-  return Promise.resolve(null);
+  console.log("Waiting for all save-document promises to resolve.")
+  Promise.all(promises);
+  if (promises) {
+    return promises[0]
+  }
+  return Promise.resolve(null)
 }
 
-function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
-  let promises: Promise<void>[] = [];
-  promises.push(logOutUser(app, docManager, svcManager).then(() => { }))
-  Promise.all(promises).then(() => {
-    return showCloseOK()
-    // return backToHub()
-  })
-  return Promise.resolve(null)
+function justSave(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
+  return Promise.resolve(saveAll(app, docManager, svcManager)
+    .then(() => { return showSaved() })
+    .then(() => {
+      console.log("Save complete.")
+    }))
+}
+
+
+function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
+  return Promise.resolve(saveAll(app, docManager, svcManager)
+    .then(() => {
+      return justQuit(app, docManager, svcManager)
+    })
+    .then(() => {
+      console.log("Save and Quit complete.")
+    }))
 }
 
 // function backToHub(): Promise<void> {
@@ -126,7 +144,17 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ISe
 //   return Promise.resolve(null)
 // }
 
-function logOutUser(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
+function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
+  return Promise.resolve(stopAndLogout(app, docManager, svcManager)
+    .then(() => {
+      showCloseOK()
+    })
+    .then(() => {
+      console.log("Quit complete.")
+    }))
+}
+
+function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: IServiceManager): Promise<void> {
   // Log the user out.
   let hubHost = PageConfig.getOption('hub_host');
   let hubPrefix = PageConfig.getOption('hub_prefix');
@@ -136,7 +164,7 @@ function logOutUser(app: JupyterLab, docManager: IDocumentManager, svcManager: I
     hubUser, 'server');
   let logoutURL = hubHost + URLExt.join(hubPrefix, 'logout');
   let settings = svcManager.serverSettings
-  console.log("Settings: ", settings)
+  console.log("Service Settings: ", settings)
   let stopReq = {
     url: stopURL,
     method: 'DELETE'
@@ -146,36 +174,52 @@ function logOutUser(app: JupyterLab, docManager: IDocumentManager, svcManager: I
     method: 'GET'
   };
   console.log("Making stop request to ", stopURL, "with settings ", settings)
-  ServerConnection.makeRequest(stopReq, settings).then(response => {
-    let status = response.xhr.status
-    if (status < 200 || status >= 300) {
-      console.log("Status ", status, "=>", response)
-      Promise.reject(ServerConnection.makeError(response))
-    }
-  }).then(() => {
-    ServerConnection.makeRequest(logoutReq, settings).then(response2 => {
-      let status2 = response2.xhr.status
-      console.log("Making logout request to ", logoutURL)
-      if (status2 < 200 || status2 >= 300) {
-        console.log("Status ", status2, "=>", response2)
-        Promise.reject(ServerConnection.makeError(response2))
+  let r = ServerConnection.makeRequest(stopReq, settings)
+    .then(response => {
+      let status = response.xhr.status
+      if (status < 200 || status >= 300) {
+        console.log("Status ", status, "=>", response)
+        Promise.reject(ServerConnection.makeError(response))
       }
-    }).then(() => {
-      /* No-op */
+      return response
     })
-  })
-  return Promise.resolve(null) // Should not reach
+    .then(() => {
+      console.log("Making logout request to ", logoutURL)
+      ServerConnection.makeRequest(logoutReq, settings).
+        then(response2 => {
+          let status2 = response2.xhr.status
+          if (status2 < 200 || status2 >= 300) {
+            console.log("Status ", status2, "=>", response2)
+            Promise.reject(ServerConnection.makeError(response2))
+          }
+          return response2
+        })
+    }).then(() => {
+      console.log("Stop and logout complete.")
+    })
+  return Promise.resolve(r)
 }
-
-
 
 function showCloseOK(): Promise<void> {
   let options = {
-    title: "Save and Quit complete",
+    title: "Shutdown complete",
     body: "It is now safe to close the browser window or tab.",
     buttons: [] as Dialog.IButton[]
   };
-  return showDialog(options).then(() => { /* no-op */ });
+  return showDialog(options).then(() => {
+    console.log("Shutdown panel displayed")
+  })
+}
+
+function showSaved(): Promise<void> {
+  let options = {
+    title: "Documents saved",
+    body: "All open documents saved.",
+    buttons: [Dialog.okButton()]
+  };
+  return showDialog(options).then(() => {
+    console.log("Saved documents panel displayed")
+  })
 }
 
 /**
