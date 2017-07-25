@@ -105,12 +105,12 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ISer
   let promises: Promise<void>[] = [];
   each(app.shell.widgets('main'), widget => {
     let context = docManager.contextForWidget(widget);
-    if (!context) {
+    if (context) {
+      console.log("Saving context for widget:", { id: widget.id })
+      promises.push(context.save())
+    } else {
       console.log("No context for widget:", { id: widget.id })
-      Promise.reject("No context for widget.")
     }
-    console.log("Saving context for widget:", { id: widget.id })
-    promises.push(context.save())
   })
   console.log("Waiting for all save-document promises to resolve.")
   Promise.all(promises);
