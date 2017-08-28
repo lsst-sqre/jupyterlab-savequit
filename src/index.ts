@@ -44,7 +44,7 @@ namespace CommandIDs {
 /**
  * Activate the jupyterhub extension.
  */
-function activateHubExtension(app: JupyterLab, palette: ICommandPalette, mainMenu: IMainMenu, docManager: IDocumentManager): void {
+function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, mainMenu: IMainMenu, docManager: IDocumentManager): void {
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
@@ -225,10 +225,10 @@ function showSaved(): Promise<void> {
 }
 
 /**
- * Initialization data for the jupyterlab_hub extension.
+ * Initialization data for the jupyterlab_savequit extension.
  */
-const hubExtension: JupyterLabPlugin<void> = {
-  activate: activateHubExtension,
+const saveQuitExtension: JupyterLabPlugin<void> = {
+  activate: activateSaveQuitExtension,
   id: 'jupyter.extensions.jupyterlab-savequit',
   requires: [
     ICommandPalette,
@@ -238,5 +238,5 @@ const hubExtension: JupyterLabPlugin<void> = {
   autoStart: true,
 };
 
-export default hubExtension;
+export default saveQuitExtension;
 
