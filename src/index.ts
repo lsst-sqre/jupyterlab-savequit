@@ -132,6 +132,7 @@ function justSave(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
 
 
 function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
+  infoDialog()
   return Promise.resolve(saveAll(app, docManager, svcManager)
     .then(() => {
       return justQuit(app, docManager, svcManager)
@@ -147,6 +148,7 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
 // }
 
 function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
+  infoDialog()
   return Promise.resolve(stopAndLogout(app, docManager, svcManager)
     .then(() => {
       showCloseOK()
@@ -221,6 +223,19 @@ function showSaved(): Promise<void> {
   };
   return showDialog(options).then(() => {
     console.log("Saved documents panel displayed")
+  })
+}
+
+function infoDialog(): Promise<void> {
+  let options = {
+    title: "Wait for confirmation",
+    body: "Please wait for confirmation that it is safe to close the" +
+    " browser window or tab.  If a \"Server Connection Error\"" +
+    " dialog appears, click \"OK\" to dismiss it; it is harmless.",
+    buttons: [Dialog.okButton()]
+  };
+  return showDialog(options).then(() => {
+    console.log("Info dialog panel displayed")
   })
 }
 
