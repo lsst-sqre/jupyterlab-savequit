@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-savequit",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "One-stop save-and-terminate-container-and-logout.",
   "author": "LSST DM/SQuaRE",
   "main": "lib/index.js",
