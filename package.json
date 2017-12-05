@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-savequit",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "One-stop save-and-terminate-container-and-logout.",
   "author": "LSST DM/SQuaRE",
   "main": "lib/index.js",
@@ -26,12 +26,14 @@
     "extension": true
   },
   "dependencies": {
-    "@jupyterlab/application": "^0.12.0",
-    "@jupyterlab/apputils": "^0.12.4",
-    "@jupyterlab/coreutils": "^0.12.0",
-    "@jupyterlab/docmanager": "^0.12.0",
+    "@jupyterlab/application": "^0.13.0",
+    "@jupyterlab/apputils": "^0.13.0",
+    "@jupyterlab/coreutils": "^0.13.0",
+    "@jupyterlab/docmanager": "^0.13.0",
+    "@jupyterlab/mainmenu": "^0.2.0",
+    "@phosphor/algorithm": "^1.1.0",
     "@phosphor/widgets": "^1.3.0",
-    "@phosphor/algorithm": "^1.1.0"
+    "@types/core-js": "^0.9.43"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
