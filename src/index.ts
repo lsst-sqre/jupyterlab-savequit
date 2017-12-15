@@ -121,11 +121,11 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: Serv
     }
   })
   console.log("Waiting for all save-document promises to resolve.")
-  Promise.all(promises);
-  if (promises) {
-    return promises[0]
+  if (!promises) {
+    promises.push(Promise.resolve(null))
   }
-  return Promise.resolve(null)
+  Promise.all(promises);
+  return promises[0]
 }
 
 function justSave(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
