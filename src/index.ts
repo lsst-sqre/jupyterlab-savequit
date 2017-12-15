@@ -110,20 +110,22 @@ function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, ma
 function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
   let promises: Promise<void>[] = [];
   each(app.shell.widgets('main'), widget => {
-    let context = docManager.contextForWidget(widget);
-    if (context) {
-      console.log("Saving context for widget:", { id: widget.id })
-      promises.push(context.save())
+    if (widget) {
+      let context = docManager.contextForWidget(widget);
+      if (context) {
+        console.log("Saving context for widget:", { id: widget.id })
+        promises.push(context.save())
+      }
     } else {
       console.log("No context for widget:", { id: widget.id })
     }
   })
   console.log("Waiting for all save-document promises to resolve.")
-  Promise.all(promises);
-  if (promises) {
-    return promises[0]
+  if (!promises) {
+    promises.push(Promise.resolve(null))
   }
-  return Promise.resolve(null)
+  Promise.all(promises);
+  return promises[0]
 }
 
 function justSave(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
@@ -145,11 +147,6 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
       console.log("Save and Quit complete.")
     }))
 }
-
-// function backToHub(): Promise<void> {
-//   location.href = '/'
-//   return Promise.resolve(null)
-// }
 
 function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
   infoDialog()
@@ -234,8 +231,7 @@ function infoDialog(): Promise<void> {
   let options = {
     title: "Wait for confirmation",
     body: "Please wait for confirmation that it is safe to close the" +
-    " browser window or tab.  If a \"Server Connection Error\"" +
-    " dialog appears, click \"OK\" to dismiss it; it is harmless.",
+    " browser window or tab.",
     buttons: [Dialog.okButton()]
   };
   return showDialog(options).then(() => {
