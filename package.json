@@ -26,9 +26,9 @@
     "extension": true
   },
   "dependencies": {
-    "@jupyterlab/application": "^1.0.1",
+    "@jupyterlab/application": "^0.14.0",
     "@jupyterlab/apputils": "^0.14.0",
-    "@jupyterlab/coreutils": "^0.14.0",
+    "@jupyterlab/coreutils": "^1.0.1",
     "@jupyterlab/docmanager": "^0.14.0",
     "@jupyterlab/mainmenu": "^0.2.0",
     "@phosphor/algorithm": "^1.1.0",

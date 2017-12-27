@@ -170,32 +170,30 @@ function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager
   let logoutURL = hubHost + URLExt.join(hubPrefix, 'logout');
   let settings = svcManager.serverSettings
   console.log("Service Settings: ", settings)
-  let stopReq = {
-    url: stopURL,
+  let stopInit = {
     method: 'DELETE'
   };
-  let logoutReq = {
-    url: logoutURL,
+  let logoutInit = {
     method: 'GET'
   };
   console.log("Making stop request to ", stopURL, "with settings ", settings)
-  let r = ServerConnection.makeRequest(stopReq, settings)
+  let r = ServerConnection.makeRequest(stopURL, stopInit, settings)
     .then(response => {
-      let status = response.xhr.status
+      let status = response.status
       if (status < 200 || status >= 300) {
         console.log("Status ", status, "=>", response)
-        Promise.reject(ServerConnection.makeError(response))
+        Promise.reject(new ServerConnection.ResponseError(response))
       }
       return response
     })
     .then(() => {
       console.log("Making logout request to ", logoutURL)
-      ServerConnection.makeRequest(logoutReq, settings).
+      ServerConnection.makeRequest(logoutURL, logoutInit, settings).
         then(response2 => {
-          let status2 = response2.xhr.status
+          let status2 = response2.status
           if (status2 < 200 || status2 >= 300) {
             console.log("Status ", status2, "=>", response2)
-            Promise.reject(ServerConnection.makeError(response2))
+            Promise.reject(new ServerConnection.ResponseError(response2))
           }
           return response2
         })
