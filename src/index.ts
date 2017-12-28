@@ -6,7 +6,7 @@ import {
 } from '@phosphor/widgets';
 
 import {
-  ICommandPalette, showDialog, Dialog
+  showDialog, Dialog
 } from '@jupyterlab/apputils';
 
 import {
@@ -41,14 +41,14 @@ export
 namespace CommandIDs {
   export const saveAll: string = 'saveall:saveall';
   export const saveQuit: string = 'savequit:savequit';
-  export const justQuit: string = 'savequit:justquit';
+  export const justQuit: string = 'justquit:justquit';
 };
 
 
 /**
  * Activate the jupyterhub extension.
  */
-function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, mainMenu: IMainMenu, docManager: IDocumentManager): void {
+function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docManager: IDocumentManager): void {
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
@@ -66,7 +66,6 @@ function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, ma
 
   let svcManager = app.serviceManager;
 
-  const category = 'Save/Exit';
   const { commands } = app;
 
   commands.addCommand(CommandIDs.saveAll, {
@@ -94,17 +93,70 @@ function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, ma
   });
 
   // Add commands and menu itmes.
-  let menu = new Menu({ commands });
-  menu.title.label = category;
-  [
-    CommandIDs.saveAll,
-    CommandIDs.saveQuit,
-    CommandIDs.justQuit
-  ].forEach(command => {
-    palette.addItem({ command, category });
-    menu.addItem({ command });
-  });
-  mainMenu.addMenu(menu, { rank: 100 });
+  let menu: Menu.IItemOptions[] =
+    [
+      { command: CommandIDs.saveAll },
+      { command: CommandIDs.saveQuit },
+      { command: CommandIDs.justQuit }
+    ]
+  // Put it at the bottom of file menu
+  let rank = 125;
+  mainMenu.fileMenu.addGroup(menu, rank);
+}
+
+function hubRequest(url: string, init: RequestInit, settings: ServerConnection.ISettings): Promise<Response> {
+
+  // Same as makeRequest except it doesn't check the URL
+
+  // Use explicit cache buster when `no-store` is set since
+  // not all browsers use it properly.
+  let cache = init.cache || settings.init.cache;
+  if (cache === 'no-store') {
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
+    url += ((/\?/).test(url) ? '&' : '?') + (new Date()).getTime();
+  }
+
+  let request = new settings.Request(url, { ...settings.init, ...init });
+
+  // Handle authentication.
+  let authenticated = false;
+  if (settings.token) {
+    authenticated = true;
+    request.headers.append('Authorization', `token ${settings.token}`);
+  } else if (typeof document !== 'undefined' && document.cookie) {
+    let xsrfToken = getCookie('_xsrf');
+    if (xsrfToken !== void 0) {
+      authenticated = true;
+      request.headers.append('X-XSRFToken', xsrfToken);
+    }
+  }
+
+  // Set the content type if there is no given data and we are
+  // using an authenticated connection.
+  if (!request.bodyUsed && authenticated) {
+    request.headers.set('Content-Type', 'application/json');
+
+    // Set the content type if there is no given data and we are
+    // using an authenticated connection.
+    if (!request.bodyUsed && authenticated) {
+      request.headers.set('Content-Type', 'application/json');
+    }
+
+    // Use `call` to avoid a `TypeError` in the browser.
+    return settings.fetch.call(null, request).catch((e: TypeError) => {
+      // Convert the TypeError into a more specific error.
+      throw new ServerConnection.NetworkError(e);
+    });
+  }
+
+  /**
+   * Get a cookie from the document.
+   */
+  function getCookie(name: string) {
+    // from tornado docs: http://www.tornadoweb.org/en/stable/guide/security.html
+    let r = document.cookie.match('\\b' + name + '=([^;]*)\\b');
+    return r ? r[1] : void 0;
+  }
 }
 
 function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
@@ -170,32 +222,30 @@ function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager
   let logoutURL = hubHost + URLExt.join(hubPrefix, 'logout');
   let settings = svcManager.serverSettings
   console.log("Service Settings: ", settings)
-  let stopReq = {
-    url: stopURL,
+  let stopInit = {
     method: 'DELETE'
   };
-  let logoutReq = {
-    url: logoutURL,
+  let logoutInit = {
     method: 'GET'
   };
   console.log("Making stop request to ", stopURL, "with settings ", settings)
-  let r = ServerConnection.makeRequest(stopReq, settings)
+  let r = hubRequest(stopURL, stopInit, settings)
     .then(response => {
-      let status = response.xhr.status
+      let status = response.status
       if (status < 200 || status >= 300) {
         console.log("Status ", status, "=>", response)
-        Promise.reject(ServerConnection.makeError(response))
+        Promise.reject(new ServerConnection.ResponseError(response))
       }
       return response
     })
     .then(() => {
       console.log("Making logout request to ", logoutURL)
-      ServerConnection.makeRequest(logoutReq, settings).
+      hubRequest(logoutURL, logoutInit, settings).
         then(response2 => {
-          let status2 = response2.xhr.status
+          let status2 = response2.status
           if (status2 < 200 || status2 >= 300) {
             console.log("Status ", status2, "=>", response2)
-            Promise.reject(ServerConnection.makeError(response2))
+            Promise.reject(new ServerConnection.ResponseError(response2))
           }
           return response2
         })
@@ -246,7 +296,6 @@ const saveQuitExtension: JupyterLabPlugin<void> = {
   activate: activateSaveQuitExtension,
   id: 'jupyter.extensions.jupyterlab-savequit',
   requires: [
-    ICommandPalette,
     IMainMenu,
     IDocumentManager
   ],
