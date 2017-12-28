@@ -93,14 +93,12 @@ function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docMana
   });
 
   // Add commands and menu itmes.
-  let menu: Menu.IItemOptions[]
-  [
-    CommandIDs.saveAll,
-    CommandIDs.saveQuit,
-    CommandIDs.justQuit
-  ].forEach(command => {
-    menu.push({ command });
-  });
+  let menu: Menu.IItemOptions[] =
+    [
+      { command: CommandIDs.saveAll },
+      { command: CommandIDs.saveQuit },
+      { command: CommandIDs.justQuit }
+    ]
   // Put it at the bottom of file menu
   let rank = 125;
   mainMenu.fileMenu.addGroup(menu, rank);
