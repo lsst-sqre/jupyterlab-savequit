@@ -41,7 +41,7 @@ export
 namespace CommandIDs {
   export const saveAll: string = 'saveall:saveall';
   export const saveQuit: string = 'savequit:savequit';
-  export const justQuit: string = 'savequit:justquit';
+  export const justQuit: string = 'justquit:justquit';
 };
 
 
