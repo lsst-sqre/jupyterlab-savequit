@@ -103,7 +103,9 @@ function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, palette
     palette.addItem({ command, category });
     menu.push({ command });
   });
-  mainMenu.fileMenu.addGroup(menu, 75);
+  // Put it at the bottom of file menu
+  let rank = 125;
+  mainMenu.fileMenu.addGroup(menu, rank);
 }
 
 function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
