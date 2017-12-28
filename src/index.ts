@@ -48,7 +48,7 @@ namespace CommandIDs {
 /**
  * Activate the jupyterhub extension.
  */
-function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, mainMenu: IMainMenu, docManager: IDocumentManager): void {
+function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, palette: ICommandPalette, docManager: IDocumentManager): void {
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
@@ -94,17 +94,16 @@ function activateSaveQuitExtension(app: JupyterLab, palette: ICommandPalette, ma
   });
 
   // Add commands and menu itmes.
-  let menu = new Menu({ commands });
-  menu.title.label = category;
+  let menu: Menu.IItemOptions[]
   [
     CommandIDs.saveAll,
     CommandIDs.saveQuit,
     CommandIDs.justQuit
   ].forEach(command => {
     palette.addItem({ command, category });
-    menu.addItem({ command });
+    menu.push({ command });
   });
-  mainMenu.addMenu(menu, { rank: 100 });
+  mainMenu.fileMenu.addGroup(menu, 75);
 }
 
 function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
