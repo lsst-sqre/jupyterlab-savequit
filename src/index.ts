@@ -39,7 +39,6 @@ import {
  */
 export
 namespace CommandIDs {
-  export const saveAll: string = 'saveall:saveall';
   export const saveQuit: string = 'savequit:savequit';
   export const justQuit: string = 'justquit:justquit';
 };
@@ -68,16 +67,8 @@ function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docMana
 
   const { commands } = app;
 
-  commands.addCommand(CommandIDs.saveAll, {
-    label: 'Save notebooks',
-    caption: 'Save all open notebooks',
-    execute: () => {
-      justSave(app, docManager, svcManager)
-    }
-  });
-
   commands.addCommand(CommandIDs.saveQuit, {
-    label: 'Save, Exit, and Log Out',
+    label: 'Save All, Exit, and Log Out',
     caption: 'Save open notebooks, destroy container, and log out',
     execute: () => {
       saveAndQuit(app, docManager, svcManager)
@@ -95,7 +86,6 @@ function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docMana
   // Add commands and menu itmes.
   let menu: Menu.IItemOptions[] =
     [
-      { command: CommandIDs.saveAll },
       { command: CommandIDs.saveQuit },
       { command: CommandIDs.justQuit }
     ]
@@ -105,58 +95,18 @@ function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docMana
 }
 
 function hubRequest(url: string, init: RequestInit, settings: ServerConnection.ISettings): Promise<Response> {
-
-  // Same as makeRequest except it doesn't check the URL
-
-  // Use explicit cache buster when `no-store` is set since
-  // not all browsers use it properly.
-  let cache = init.cache || settings.init.cache;
-  if (cache === 'no-store') {
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
-    url += ((/\?/).test(url) ? '&' : '?') + (new Date()).getTime();
-  }
-
-  let request = new settings.Request(url, { ...settings.init, ...init });
-
-  // Handle authentication.
-  let authenticated = false;
-  if (settings.token) {
-    authenticated = true;
-    request.headers.append('Authorization', `token ${settings.token}`);
-  } else if (typeof document !== 'undefined' && document.cookie) {
-    let xsrfToken = getCookie('_xsrf');
-    if (xsrfToken !== void 0) {
-      authenticated = true;
-      request.headers.append('X-XSRFToken', xsrfToken);
-    }
-  }
-
-  // Set the content type if there is no given data and we are
-  // using an authenticated connection.
-  if (!request.bodyUsed && authenticated) {
-    request.headers.set('Content-Type', 'application/json');
-
-    // Set the content type if there is no given data and we are
-    // using an authenticated connection.
-    if (!request.bodyUsed && authenticated) {
-      request.headers.set('Content-Type', 'application/json');
-    }
-
-    // Use `call` to avoid a `TypeError` in the browser.
-    return settings.fetch.call(null, request).catch((e: TypeError) => {
-      // Convert the TypeError into a more specific error.
-      throw new ServerConnection.NetworkError(e);
-    });
-  }
-
-  /**
-   * Get a cookie from the document.
-   */
-  function getCookie(name: string) {
-    // from tornado docs: http://www.tornadoweb.org/en/stable/guide/security.html
-    let r = document.cookie.match('\\b' + name + '=([^;]*)\\b');
-    return r ? r[1] : void 0;
-  }
+  // Fake out URL check in makeRequest
+  let newSettings = ServerConnection.makeSettings({
+    baseUrl: url,
+    pageUrl: settings.pageUrl,
+    wsUrl: settings.wsUrl,
+    init: settings.init,
+    token: settings.token,
+    Request: settings.Request,
+    Headers: settings.Headers,
+    WebSocket: settings.WebSocket
+  });
+  return ServerConnection.makeRequest(url, init, newSettings)
 }
 
 function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
@@ -178,14 +128,6 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: Serv
   }
   Promise.all(promises);
   return promises[0]
-}
-
-function justSave(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
-  return Promise.resolve(saveAll(app, docManager, svcManager)
-    .then(() => { return showSaved() })
-    .then(() => {
-      console.log("Save complete.")
-    }))
 }
 
 
@@ -263,17 +205,6 @@ function showCloseOK(): Promise<void> {
   };
   return showDialog(options).then(() => {
     console.log("Shutdown panel displayed")
-  })
-}
-
-function showSaved(): Promise<void> {
-  let options = {
-    title: "Documents saved",
-    body: "All open documents saved.",
-    buttons: [Dialog.okButton()]
-  };
-  return showDialog(options).then(() => {
-    console.log("Saved documents panel displayed")
   })
 }
 
