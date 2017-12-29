@@ -212,7 +212,8 @@ function infoDialog(): Promise<void> {
   let options = {
     title: "Wait for confirmation",
     body: "Please wait for confirmation that it is safe to close the" +
-    " browser window or tab.",
+    " browser window or tab.  If a server connection error appears," +
+    " ignore it; it is harmless.",
     buttons: [Dialog.okButton()]
   };
   return showDialog(options).then(() => {
