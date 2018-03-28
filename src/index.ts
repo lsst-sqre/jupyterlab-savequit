@@ -109,8 +109,8 @@ function hubRequest(url: string, init: RequestInit, settings: ServerConnection.I
   return ServerConnection.makeRequest(url, init, newSettings)
 }
 
-function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
-  let promises: Promise<void>[] = [];
+function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
+  let promises: Promise<any>[] = [];
   each(app.shell.widgets('main'), widget => {
     if (widget) {
       let context = docManager.contextForWidget(widget);
@@ -124,14 +124,14 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: Serv
   })
   console.log("Waiting for all save-document promises to resolve.")
   if (!promises) {
-    promises.push(Promise.resolve(null))
+    promises.push(Promise.resolve(1))
   }
   Promise.all(promises);
   return promises[0]
 }
 
 
-function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
+function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   infoDialog()
   return Promise.resolve(saveAll(app, docManager, svcManager)
     .then(() => {
@@ -142,7 +142,7 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
     }))
 }
 
-function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
+function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   infoDialog()
   return Promise.resolve(stopAndLogout(app, docManager, svcManager)
     .then(() => {
@@ -153,7 +153,7 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
     }))
 }
 
-function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<void> {
+function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
   let hubHost = PageConfig.getOption('hub_host');
   let hubPrefix = PageConfig.getOption('hub_prefix');
