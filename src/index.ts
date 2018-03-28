@@ -133,13 +133,15 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: Serv
 
 function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   infoDialog()
-  return Promise.resolve(saveAll(app, docManager, svcManager)
-    .then(() => {
-      return justQuit(app, docManager, svcManager)
-    })
-    .then(() => {
-      console.log("Save and Quit complete.")
-    }))
+  const retval = Promise.resolve(saveAll(app, docManager, svcManager));
+  retval.then((res) => {
+    return justQuit(app, docManager, svcManager)
+  });
+  retval.catch((err) => {
+    console.log("saveAll failed: ", err.message);
+  });
+  console.log("Save and Quit complete.")
+  return retval
 }
 
 function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
