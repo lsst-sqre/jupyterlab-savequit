@@ -151,7 +151,7 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
       console.log("Quit complete.")
     })
     .then(() => {
-      window.location.replace(PageConfig.getOption('hub_prefix'))
+      window.location.replace("/")
     }))
 }
 
@@ -202,9 +202,9 @@ function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager
 
 function infoDialog(): Promise<void> {
   let options = {
-    title: "Wait for confirmation",
-    body: "Please wait until you are redirected back to the Hub.  If a " +
-    " server connection error appears, ignore it; it is harmless.",
+    title: "Redirecting to landing page",
+    body: "Please wait until you are redirected back to the landing page." +
+    " If a server connection error appears, ignore it; it is harmless.",
     buttons: [Dialog.okButton()]
   };
   return showDialog(options).then(() => {
