@@ -148,12 +148,13 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
   infoDialog()
   return Promise.resolve(stopAndLogout(app, docManager, svcManager)
     .then(() => {
-      showCloseOK()
+      console.log("Quit complete.")
     })
     .then(() => {
-      console.log("Quit complete.")
+      window.location.replace(PageConfig.getOption('hub_prefix'))
     }))
 }
+
 
 function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
@@ -197,17 +198,6 @@ function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager
       console.log("Stop and logout complete.")
     })
   return Promise.resolve(r)
-}
-
-function showCloseOK(): Promise<void> {
-  let options = {
-    title: "Shutdown complete",
-    body: "It is now safe to close the browser window or tab.",
-    buttons: [] as Dialog.IButton[]
-  };
-  return showDialog(options).then(() => {
-    console.log("Shutdown panel displayed")
-  })
 }
 
 function infoDialog(): Promise<void> {
