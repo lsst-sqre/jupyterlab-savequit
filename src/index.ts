@@ -148,12 +148,13 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
   infoDialog()
   return Promise.resolve(stopAndLogout(app, docManager, svcManager)
     .then(() => {
-      showCloseOK()
+      console.log("Quit complete.")
     })
     .then(() => {
-      console.log("Quit complete.")
+      window.location.replace("/")
     }))
 }
+
 
 function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
@@ -199,23 +200,11 @@ function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager
   return Promise.resolve(r)
 }
 
-function showCloseOK(): Promise<void> {
-  let options = {
-    title: "Shutdown complete",
-    body: "It is now safe to close the browser window or tab.",
-    buttons: [] as Dialog.IButton[]
-  };
-  return showDialog(options).then(() => {
-    console.log("Shutdown panel displayed")
-  })
-}
-
 function infoDialog(): Promise<void> {
   let options = {
-    title: "Wait for confirmation",
-    body: "Please wait for confirmation that it is safe to close the" +
-    " browser window or tab.  If a server connection error appears," +
-    " ignore it; it is harmless.",
+    title: "Redirecting to landing page",
+    body: "Please wait until you are redirected back to the landing page." +
+    " If a server connection error appears, ignore it; it is harmless.",
     buttons: [Dialog.okButton()]
   };
   return showDialog(options).then(() => {
