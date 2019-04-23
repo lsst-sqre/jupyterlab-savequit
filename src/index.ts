@@ -14,7 +14,7 @@ import {
 } from '@jupyterlab/mainmenu';
 
 import {
-  JupyterLab, JupyterLabPlugin
+  JupyterLab, JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import {
@@ -215,7 +215,7 @@ function infoDialog(): Promise<void> {
 /**
  * Initialization data for the jupyterlab_savequit extension.
  */
-const saveQuitExtension: JupyterLabPlugin<void> = {
+const saveQuitExtension: JupyterFrontEndPlugin<void> = {
   activate: activateSaveQuitExtension,
   id: 'jupyter.extensions.jupyterlab-savequit',
   requires: [
