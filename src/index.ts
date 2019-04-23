@@ -14,7 +14,7 @@ import {
 } from '@jupyterlab/mainmenu';
 
 import {
-  JupyterLab, JupyterFrontEndPlugin
+  JupyterFrontEnd, JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import {
@@ -47,7 +47,7 @@ namespace CommandIDs {
 /**
  * Activate the jupyterhub extension.
  */
-function activateSaveQuitExtension(app: JupyterLab, mainMenu: IMainMenu, docManager: IDocumentManager): void {
+function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, docManager: IDocumentManager): void {
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
@@ -109,7 +109,7 @@ function hubRequest(url: string, init: RequestInit, settings: ServerConnection.I
   return ServerConnection.makeRequest(url, init, newSettings)
 }
 
-function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
+function saveAll(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   let promises: Promise<any>[] = [];
   each(app.shell.widgets('main'), widget => {
     if (widget) {
@@ -131,7 +131,7 @@ function saveAll(app: JupyterLab, docManager: IDocumentManager, svcManager: Serv
 }
 
 
-function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
+function saveAndQuit(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   infoDialog()
   const retval = Promise.resolve(saveAll(app, docManager, svcManager));
   retval.then((res) => {
@@ -144,7 +144,7 @@ function saveAndQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: 
   return retval
 }
 
-function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
+function justQuit(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   infoDialog()
   return Promise.resolve(stopAndLogout(app, docManager, svcManager)
     .then(() => {
@@ -156,7 +156,7 @@ function justQuit(app: JupyterLab, docManager: IDocumentManager, svcManager: Ser
 }
 
 
-function stopAndLogout(app: JupyterLab, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
+function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
   let hubHost = PageConfig.getOption('hub_host');
   let hubPrefix = PageConfig.getOption('hub_prefix');
