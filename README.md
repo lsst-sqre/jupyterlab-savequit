@@ -7,7 +7,7 @@ out of the hub.
 
 ## Prerequisites
 
-* JupyterLab 0.31.0 or later.
+* JupyterLab 1.0.0-alpha6 or later.
 * A properly configured JupyterHub.
 
 ## Installation
