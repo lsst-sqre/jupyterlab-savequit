@@ -51,9 +51,9 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
-  let hubHost = PageConfig.getOption('hub_host');
-  let hubPrefix = PageConfig.getOption('hub_prefix');
-  let hubUser = PageConfig.getOption('hub_user');
+  let hubHost = PageConfig.getOption('hubHost');
+  let hubPrefix = PageConfig.getOption('hubPrefix');
+  let hubUser = PageConfig.getOption('hubUser');
 
   if (!hubPrefix) {
     console.log('jupyterlab-savequit: No configuration found.');
