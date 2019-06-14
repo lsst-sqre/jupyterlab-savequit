@@ -68,16 +68,16 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
   const { commands } = app;
 
   commands.addCommand(CommandIDs.saveQuit, {
-    label: 'Save All, Exit, and Log Out',
-    caption: 'Save open notebooks, destroy container, and log out',
+    label: 'Save All and Exit',
+    caption: 'Save open notebooks and destroy container',
     execute: () => {
       saveAndQuit(app, docManager, svcManager)
     }
   });
 
   commands.addCommand(CommandIDs.justQuit, {
-    label: 'Exit and Log Out Without Saving',
-    caption: 'Destroy container and log out',
+    label: 'Exit Without Saving',
+    caption: 'Destroy container',
     execute: () => {
       justQuit(app, docManager, svcManager)
     }
