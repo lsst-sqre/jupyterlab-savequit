@@ -90,7 +90,7 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
       { command: CommandIDs.justQuit }
     ]
   // Put it at the bottom of file menu
-  let rank = 125;
+  let rank = 150;
   mainMenu.fileMenu.addGroup(menu, rank);
 }
 
@@ -98,10 +98,11 @@ function hubRequest(url: string, init: RequestInit, settings: ServerConnection.I
   // Fake out URL check in makeRequest
   let newSettings = ServerConnection.makeSettings({
     baseUrl: url,
-    pageUrl: settings.pageUrl,
+    appUrl: settings.appUrl,
     wsUrl: settings.wsUrl,
     init: settings.init,
     token: settings.token,
+    fetch: settings.fetch,
     Request: settings.Request,
     Headers: settings.Headers,
     WebSocket: settings.WebSocket
