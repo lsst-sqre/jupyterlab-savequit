@@ -159,9 +159,9 @@ function justQuit(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager
 
 function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
-  let hubHost = PageConfig.getOption('hub_host');
-  let hubPrefix = PageConfig.getOption('hub_prefix');
-  let hubUser = PageConfig.getOption('hub_user');
+  let hubHost = PageConfig.getOption('hubHost');
+  let hubPrefix = PageConfig.getOption('hubPrefix');
+  let hubUser = PageConfig.getOption('hubUser');
   console.log("Logging out user:", { user: hubUser })
   let stopURL = hubHost + URLExt.join(hubPrefix, 'api/users',
     hubUser, 'server');
