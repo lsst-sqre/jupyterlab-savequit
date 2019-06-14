@@ -51,9 +51,9 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
-  let hubHost = PageConfig.getOption('hub_host');
-  let hubPrefix = PageConfig.getOption('hub_prefix');
-  let hubUser = PageConfig.getOption('hub_user');
+  let hubHost = PageConfig.getOption('hubHost');
+  let hubPrefix = PageConfig.getOption('hubPrefix');
+  let hubUser = PageConfig.getOption('hubUser');
 
   if (!hubPrefix) {
     console.log('jupyterlab-savequit: No configuration found.');
@@ -68,16 +68,16 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
   const { commands } = app;
 
   commands.addCommand(CommandIDs.saveQuit, {
-    label: 'Save All, Exit, and Log Out',
-    caption: 'Save open notebooks, destroy container, and log out',
+    label: 'Save All and Exit',
+    caption: 'Save open notebooks and destroy container',
     execute: () => {
       saveAndQuit(app, docManager, svcManager)
     }
   });
 
   commands.addCommand(CommandIDs.justQuit, {
-    label: 'Exit and Log Out Without Saving',
-    caption: 'Destroy container and log out',
+    label: 'Exit Without Saving',
+    caption: 'Destroy container',
     execute: () => {
       justQuit(app, docManager, svcManager)
     }
@@ -90,7 +90,7 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
       { command: CommandIDs.justQuit }
     ]
   // Put it at the bottom of file menu
-  let rank = 125;
+  let rank = 150;
   mainMenu.fileMenu.addGroup(menu, rank);
 }
 
@@ -98,10 +98,11 @@ function hubRequest(url: string, init: RequestInit, settings: ServerConnection.I
   // Fake out URL check in makeRequest
   let newSettings = ServerConnection.makeSettings({
     baseUrl: url,
-    pageUrl: settings.pageUrl,
+    appUrl: settings.appUrl,
     wsUrl: settings.wsUrl,
     init: settings.init,
     token: settings.token,
+    fetch: settings.fetch,
     Request: settings.Request,
     Headers: settings.Headers,
     WebSocket: settings.WebSocket
@@ -158,9 +159,9 @@ function justQuit(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager
 
 function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
   // Log the user out.
-  let hubHost = PageConfig.getOption('hub_host');
-  let hubPrefix = PageConfig.getOption('hub_prefix');
-  let hubUser = PageConfig.getOption('hub_user');
+  let hubHost = PageConfig.getOption('hubHost');
+  let hubPrefix = PageConfig.getOption('hubPrefix');
+  let hubUser = PageConfig.getOption('hubUser');
   console.log("Logging out user:", { user: hubUser })
   let stopURL = hubHost + URLExt.join(hubPrefix, 'api/users',
     hubUser, 'server');
