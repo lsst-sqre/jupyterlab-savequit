@@ -3,7 +3,7 @@
 
 import {
   Menu
-} from '@phosphor/widgets';
+} from '@lumino/widgets';
 
 import {
   showDialog, Dialog
@@ -31,7 +31,7 @@ import {
 
 import {
   each
-} from '@phosphor/algorithm';
+} from '@lumino/algorithm';
 
 
 /**
