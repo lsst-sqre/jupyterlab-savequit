@@ -107,6 +107,7 @@ function hubRequest(url: string, init: RequestInit, settings: ServerConnection.I
     Headers: settings.Headers,
     WebSocket: settings.WebSocket
   });
+  console.log("hubRequest: URL: ", url, " | New settings:", settings)
   return ServerConnection.makeRequest(url, init, newSettings)
 }
 
