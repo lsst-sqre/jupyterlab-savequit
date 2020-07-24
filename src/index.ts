@@ -51,17 +51,17 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
 
   // This config is provided by JupyterHub by the single-user server app
   // via in dictionary app.web_app.settings['page_config_data'].
-  let hubHost = PageConfig.getOption('hubHost');
-  let hubPrefix = PageConfig.getOption('hubPrefix');
-  let hubUser = PageConfig.getOption('hubUser');
+  // (requires RubinLapApp)
+  let hubUrl = PageConfig.getOption('rubinHubApiUrl');
+  let hubUser = PageConfig.getOption('rubinHubUser');
 
-  if (!hubPrefix) {
+  if (!hubUrl) {
     console.log('jupyterlab-savequit: No configuration found.');
     return;
   }
 
   console.log('jupyterlab-savequit: Found configuration ',
-    { hubHost: hubHost, hubPrefix: hubPrefix, hubUser: hubUser });
+    { hubUrl: hubUrl, hubUser: hubUser });
 
   let svcManager = app.serviceManager;
 
@@ -94,14 +94,14 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
   mainMenu.fileMenu.addGroup(menu, rank);
 }
 
-function hubRequest(url: string, init: RequestInit, settings: ServerConnection.ISettings): Promise<Response> {
+function hubRequest(url: string, init: RequestInit, settings: ServerConnection.ISettings, token: string): Promise<Response> {
   // Fake out URL check in makeRequest
   let newSettings = ServerConnection.makeSettings({
     baseUrl: url,
     appUrl: settings.appUrl,
     wsUrl: settings.wsUrl,
     init: settings.init,
-    token: settings.token,
+    token: token,
     fetch: settings.fetch,
     Request: settings.Request,
     Headers: settings.Headers,
@@ -159,14 +159,12 @@ function justQuit(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager
 
 
 function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcManager: ServiceManager): Promise<any> {
-  // Log the user out.
-  let hubHost = PageConfig.getOption('hubHost');
-  let hubPrefix = PageConfig.getOption('hubPrefix');
-  let hubUser = PageConfig.getOption('hubUser');
+  let hubUrl = PageConfig.getOption('rubinHubApiUrl');
+  let token = PageConfig.getOption('rubinHubApiToken');
+  let hubUser = PageConfig.getOption('rubinHubUser');
   console.log("Logging out user:", { user: hubUser })
-  let stopURL = hubHost + URLExt.join(hubPrefix, 'api/users',
-    hubUser, 'server');
-  let logoutURL = hubHost + URLExt.join(hubPrefix, 'logout');
+  let stopURL = URLExt.join(hubUrl, 'api/users', hubUser, 'server');
+  let logoutURL = URLExt.join(hubUrl, 'logout');
   let settings = svcManager.serverSettings
   console.log("Service Settings: ", settings)
   let stopInit = {
@@ -176,7 +174,7 @@ function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcMa
     method: 'GET'
   };
   console.log("Making stop request to ", stopURL, "with settings ", settings)
-  let r = hubRequest(stopURL, stopInit, settings)
+  let r = hubRequest(stopURL, stopInit, settings, token)
     .then(response => {
       let status = response.status
       if (status < 200 || status >= 300) {
@@ -187,7 +185,7 @@ function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcMa
     })
     .then(() => {
       console.log("Making logout request to ", logoutURL)
-      hubRequest(logoutURL, logoutInit, settings).
+      hubRequest(logoutURL, logoutInit, settings, token).
         then(response2 => {
           let status2 = response2.status
           if (status2 < 200 || status2 >= 300) {
@@ -205,8 +203,7 @@ function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcMa
 function infoDialog(): Promise<void> {
   let options = {
     title: "Redirecting to landing page",
-    body: "Please wait until you are redirected back to the landing page." +
-    " If a server connection error appears, ignore it; it is harmless.",
+    body: "Please wait until you are redirected back to the landing page.",
     buttons: [Dialog.okButton()]
   };
   return showDialog(options).then(() => {
