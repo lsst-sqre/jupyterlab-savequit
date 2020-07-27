@@ -163,7 +163,7 @@ function stopAndLogout(app: JupyterFrontEnd, docManager: IDocumentManager, svcMa
   let token = PageConfig.getOption('rubinHubApiToken');
   let hubUser = PageConfig.getOption('rubinHubUser');
   console.log("Logging out user:", { user: hubUser })
-  let stopURL = URLExt.join(hubUrl, 'api/users', hubUser, 'server');
+  let stopURL = URLExt.join(hubUrl, 'users', hubUser, 'server');
   let logoutURL = URLExt.join(hubUrl, 'logout');
   let settings = svcManager.serverSettings
   console.log("Service Settings: ", settings)
