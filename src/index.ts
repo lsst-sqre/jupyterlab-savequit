@@ -95,17 +95,17 @@ function activateSaveQuitExtension(app: JupyterFrontEnd, mainMenu: IMainMenu, do
 }
 
 function hubRequest(url: string, init: RequestInit, settings: ServerConnection.ISettings, token: string): Promise<Response> {
-  // Fake out URL check in makeRequest
+  // Fake out URL check in makeRequest and disable ws
   let newSettings = ServerConnection.makeSettings({
     baseUrl: url,
     appUrl: settings.appUrl,
-    wsUrl: settings.wsUrl,
+    wsUrl: url,
     init: settings.init,
     token: token,
     fetch: settings.fetch,
     Request: settings.Request,
     Headers: settings.Headers,
-    WebSocket: settings.WebSocket
+    WebSocket: null
   });
   console.log("hubRequest: URL: ", url, " | New settings:", settings)
   return ServerConnection.makeRequest(url, init, newSettings)
